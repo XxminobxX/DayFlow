@@ -2,6 +2,120 @@ const { PrismaClient } = require('@prisma/client');
 const prisma = new PrismaClient();
 
 /**
+ * Generate unique Employee ID
+ * Format: EMP-YYYY-0001
+ */
+const generateEmployeeId = async () => {
+  const year = new Date().getFullYear();
+  const lastEmployee = await prisma.employee.findFirst({
+    orderBy: { id: 'desc' },
+    select: { id: true },
+  });
+
+  let nextNumber = 1;
+  if (lastEmployee && lastEmployee.id) {
+    const lastId = lastEmployee.id;
+    const match = lastId.match(/EMP-\d+-(\d+)/);
+    if (match) {
+      nextNumber = parseInt(match[1]) + 1;
+    }
+  }
+
+  return `EMP-${year}-${String(nextNumber).padStart(4, '0')}`;
+};
+
+/**
+ * Generate temporary password
+ * Format: 12 character alphanumeric
+ */
+const generateTemporaryPassword = () => {
+  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%';
+  let password = '';
+  for (let i = 0; i < 12; i++) {
+    password += chars.charAt(Math.floor(Math.random() * chars.length));
+  }
+  return password;
+};
+
+/**
+ * Create new employee (Admin-only)
+ * POST /api/employees
+ * Auth: Admin only
+ * Body: { firstName, lastName, email, phone, position, department, dateOfBirth, address }
+ * Returns: { employeeId, firebaseUid, temporaryPassword }
+ */
+exports.createEmployee = async (req, res) => {
+  try {
+    // Verify admin
+    if (req.employee.role !== 'ADMIN') {
+      return res.status(403).json({ error: 'Only admins can create employees' });
+    }
+
+    const { firstName, lastName, email, phone, position, department, dateOfBirth, address } = req.body;
+
+    // Validation
+    if (!firstName || !lastName || !email || !phone || !position || !department) {
+      return res.status(400).json({ 
+        error: 'Missing required fields: firstName, lastName, email, phone, position, department' 
+      });
+    }
+
+    // Check if email already exists
+    const existingEmployee = await prisma.employee.findUnique({
+      where: { email },
+    });
+    if (existingEmployee) {
+      return res.status(409).json({ error: 'Email already exists' });
+    }
+
+    // Generate Employee ID and temporary password
+    const employeeId = await generateEmployeeId();
+    const temporaryPassword = generateTemporaryPassword();
+
+    // Generate Firebase UID (placeholder - actual Firebase creation handled by frontend/auth service)
+    const firebaseUid = `firebase-uid-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+
+    // Create employee in database
+    const newEmployee = await prisma.employee.create({
+      data: {
+        id: employeeId,
+        firebaseUid,
+        email,
+        firstName,
+        lastName,
+        phone,
+        position,
+        department,
+        dateOfBirth: dateOfBirth ? new Date(dateOfBirth) : null,
+        address: address || null,
+        role: 'EMPLOYEE',
+        createdAt: new Date(),
+      },
+    });
+
+    // Return employee details with temporary credentials
+    res.status(201).json({
+      message: 'Employee created successfully',
+      employee: {
+        employeeId: newEmployee.id,
+        firebaseUid: newEmployee.firebaseUid,
+        email: newEmployee.email,
+        firstName: newEmployee.firstName,
+        lastName: newEmployee.lastName,
+        position: newEmployee.position,
+      },
+      credentials: {
+        temporaryPassword,
+        note: 'Employee must change password on first login. Share this securely.',
+      },
+    });
+  } catch (error) {
+    console.error('Error creating employee:', error);
+    res.status(500).json({ error: 'Failed to create employee' });
+  }
+};
+
+/**
  * Get current employee profile
  * GET /api/employees/me
  * Auth: Required (firebaseUid from middleware)

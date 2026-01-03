@@ -4,6 +4,7 @@ const firebaseAuth = require('../middleware/firebaseAuth');
 const devAuth = require('../middleware/devAuth');
 const roleMiddleware = require('../middleware/role');
 const {
+  createEmployee,
   getMyProfile,
   updateMyProfile,
   getAllEmployees,
@@ -19,6 +20,7 @@ router.get('/me', auth, roleMiddleware(), getMyProfile);
 router.put('/me', auth, roleMiddleware(), updateMyProfile);
 
 // Admin routes
+router.post('/', auth, roleMiddleware(['ADMIN']), createEmployee);
 router.get('/', auth, roleMiddleware(['ADMIN']), getAllEmployees);
 router.get('/:id', auth, roleMiddleware(['ADMIN']), getEmployeeById);
 router.put('/:id', auth, roleMiddleware(['ADMIN']), updateEmployee);
