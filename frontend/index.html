@@ -1,0 +1,578 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DayFlow | Employee Dashboard</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <style>
+        /* --- 1. VARIABLES & RESET --- */
+        :root {
+            --black: #000000;
+            --white: #ffffff;
+            --glass-bg: rgba(255, 255, 255, 0.96);
+            --glass-border: rgba(255, 255, 255, 0.4);
+            --shadow-deep: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+            --radius-xl: 28px;
+            --primary-blue: #2563eb;
+            --primary-purple: #c084fc;
+            --status-present: #22c55e;
+            --status-leave: #ef4444;
+            --status-half: #eab308;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', sans-serif; }
+
+        body {
+            background-image: linear-gradient(rgba(0,0,0,0.7), rgba(0,0,0,0.7)),
+                              url('https://images.unsplash.com/photo-1497366216548-37526070297c?q=80&w=2301&auto=format&fit=crop&saturation=-100'); 
+            background-size: cover;
+            background-attachment: fixed;
+            background-position: center;
+            min-height: 100vh;
+            color: var(--black);
+            overflow-x: hidden;
+            display: flex; flex-direction: column;
+        }
+
+        /* --- HEADER --- */
+        header {
+            margin: 1.5rem auto; width: 92%; max-width: 1400px;
+            padding: 1rem 2rem;
+            background: var(--glass-bg); backdrop-filter: blur(12px);
+            border-radius: 50px;
+            display: flex; justify-content: space-between; align-items: center;
+            box-shadow: var(--shadow-deep); border: 1px solid var(--glass-border);
+            z-index: 100; position: sticky; top: 20px;
+        }
+
+        .brand { display: flex; align-items: center; gap: 0.8rem; }
+        .logo-icon { width: 40px; height: 40px; background: white; border-radius: 50%; display: grid; place-items: center; color: black; }
+        .brand-text { font-weight: 900; font-size: 1.4rem; letter-spacing: -1px; text-transform: uppercase; color: black; }
+
+        .nav-links a { 
+            text-decoration: none; color: #666; font-weight: 600; 
+            font-size: 0.85rem; text-transform: uppercase; margin: 0 1.5rem; cursor: pointer; transition: 0.3s;
+        }
+        .nav-links a:hover, .nav-links a.active { color: var(--black); border-bottom: 2px solid black; }
+
+        .header-controls { display: flex; align-items: center; gap: 1.5rem; position: relative; }
+
+        .status-toggle {
+            display: flex; align-items: center; gap: 10px; cursor: pointer;
+            background: rgba(0,0,0,0.05); padding: 8px 16px; border-radius: 50px;
+            border: 1px solid rgba(0,0,0,0.1); transition: 0.3s;
+        }
+        .status-toggle:hover { background: rgba(0,0,0,0.1); }
+        .status-dot { width: 10px; height: 10px; background: #333; border-radius: 50%; transition: 0.3s; }
+        .status-dot.active { background: #22c55e; box-shadow: 0 0 10px #22c55e; }
+        .status-text { font-size: 0.8rem; font-weight: 700; text-transform: uppercase; }
+
+        .avatar-mini { 
+            width: 45px; height: 45px; border-radius: 50%; background: #ccc; 
+            border: 2px solid white; cursor: pointer; overflow: hidden; transition: transform 0.2s;
+        }
+        .avatar-mini:hover { transform: scale(1.05); }
+        .avatar-mini img { width: 100%; height: 100%; object-fit: cover; filter: grayscale(100%); }
+
+        .dropdown {
+            position: absolute; top: 60px; right: 0; background: white; width: 180px; padding: 0.5rem 0;
+            border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.3); display: none; flex-direction: column; overflow: hidden; animation: fadeIn 0.2s; z-index: 101;
+        }
+        .dropdown.show { display: flex; }
+        .dropdown-item {
+            padding: 12px 20px; font-size: 0.9rem; font-weight: 600; color: #333;
+            cursor: pointer; transition: 0.2s; border-bottom: 1px solid #f0f0f0;
+        }
+        .dropdown-item:hover { background: #f3f4f6; }
+
+        /* --- VIEWS --- */
+        .view-section { display: none; width: 92%; max-width: 1400px; margin: 0 auto; padding-bottom: 50px; }
+        .view-section.active { display: block; animation: fadeIn 0.5s; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* --- DASHBOARD STYLES --- */
+        .quote-section { text-align: center; color: white; padding: 4rem 0 2rem 0; }
+        .quote-text { font-size: 2.2rem; font-weight: 900; text-transform: uppercase; text-shadow: 0 10px 30px rgba(0,0,0,0.8); line-height: 1.1; }
+        .quote-author { font-size: 0.9rem; opacity: 0.8; margin-top: 1rem; letter-spacing: 2px; text-transform: uppercase; }
+
+        .controls-row {
+            display: flex; justify-content: center; 
+            align-items: center; margin-bottom: 3rem; margin-top: 2rem;
+        }
+        .search-bar {
+            background: rgba(255,255,255,0.15); border: 1px solid rgba(255,255,255,0.3);
+            padding: 12px 24px; border-radius: 50px; width: 400px; color: white;
+            font-size: 0.9rem; outline: none; backdrop-filter: blur(5px); transition: width 0.3s;
+        }
+        .search-bar:focus { width: 500px; background: rgba(255,255,255,0.25); border-color: white; }
+
+        .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 2rem; }
+        .card {
+            background: var(--glass-bg); border-radius: var(--radius-xl); padding: 2rem;
+            text-align: center; cursor: pointer; transition: transform 0.3s;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.2); border: 1px solid rgba(255,255,255,0.3);
+            position: relative; display: flex; flex-direction: column; align-items: center; height: 380px;
+        }
+        .card:hover { transform: scale(1.03) translateY(-10px); z-index: 10; box-shadow: var(--shadow-deep); }
+        .card-status-indicator { position: absolute; top: 25px; right: 25px; font-size: 1.5rem; text-shadow: 0 2px 5px rgba(0,0,0,0.2); }
+        .card-img { width: 100px; height: 100px; border-radius: 50%; object-fit: cover; filter: grayscale(100%); border: 4px solid #f0f0f0; margin-bottom: 1.5rem; }
+        .card h3 { font-size: 1.4rem; font-weight: 900; margin-bottom: 0.5rem; letter-spacing: -0.5px; }
+        .card p { font-size: 0.85rem; font-weight: 600; color: #555; text-transform: uppercase; margin-bottom: 2rem; letter-spacing: 1px; }
+        .card-footer { margin-top: auto; width: 100%; padding-top: 1.5rem; border-top: 1px solid #eee; display: flex; justify-content: space-around; }
+        .stat-val { font-weight: 900; font-size: 1.1rem; display: block; }
+        .stat-label { font-size: 0.7rem; color: #888; text-transform: uppercase; }
+
+        /* --- ATTENDANCE VIEW STYLES --- */
+        .att-container {
+            background: var(--glass-bg); backdrop-filter: blur(20px);
+            border-radius: var(--radius-xl); margin-top: 2rem; padding: 2.5rem;
+            box-shadow: var(--shadow-deep);
+        }
+        .att-title { font-size: 1.8rem; font-weight: 900; text-transform: uppercase; margin-bottom: 2rem; padding-left: 0.5rem;}
+        .att-toolbar { display: flex; gap: 1rem; align-items: center; margin-bottom: 2rem; flex-wrap: wrap; border-bottom: 2px solid #eee; padding-bottom: 1.5rem; }
+        .icon-btn { width: 40px; height: 40px; border: 2px solid black; border-radius: 8px; display: flex; align-items: center; justify-content: center; cursor: pointer; background: white; font-weight: bold; font-size: 1.2rem; transition: 0.2s; }
+        .icon-btn:hover { background: black; color: white; }
+        .month-select { padding: 0 1.5rem; height: 40px; border: 2px solid black; border-radius: 8px; font-weight: 700; font-size: 1rem; background: white; cursor: pointer; display: flex; align-items: center; justify-content: space-between; min-width: 120px; }
+        .att-stat { border: 2px solid #ddd; padding: 0 1.5rem; height: 40px; border-radius: 8px; display: flex; flex-direction: column; justify-content: center; align-items: center; background: #f9fafb; min-width: 150px; }
+        .att-stat span:first-child { font-size: 0.65rem; text-transform: uppercase; font-weight: 700; color: #666; }
+        .att-stat span:last-child { font-size: 0.9rem; font-weight: 900; color: black; }
+
+        /* Calendar Grid */
+        .calendar-wrapper { margin-bottom: 2rem; }
+        .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 10px; }
+        .cal-header { text-align: center; font-weight: 700; color: #666; font-size: 0.85rem; text-transform: uppercase; padding-bottom: 10px; }
+        .cal-day { background: rgba(255,255,255,0.5); border: 1px solid #eee; aspect-ratio: 1/1; border-radius: 12px; display: flex; flex-direction: column; justify-content: center; align-items: center; cursor: pointer; transition: all 0.2s; position: relative; }
+        .cal-day:hover { transform: scale(1.05); background: white; border-color: black; z-index: 5; box-shadow: 0 5px 15px rgba(0,0,0,0.1); }
+        .cal-day.active-day { border-color: black; background: white; box-shadow: 0 0 0 2px black; }
+        .cal-date { font-weight: 700; font-size: 1.1rem; margin-bottom: 5px; }
+        .cal-status-dot { width: 8px; height: 8px; border-radius: 50%; }
+        .c-present { background: var(--status-present); } .c-absent { background: var(--status-leave); } .c-leave { background: var(--primary-blue); } .c-weekend { background: #ddd; }
+        .empty-day { background: transparent; border: none; cursor: default; }
+        .att-table { width: 100%; border-collapse: collapse; min-width: 700px; }
+        .att-table th { text-align: left; padding: 1.5rem 1rem; border-bottom: 2px solid black; text-transform: uppercase; font-size: 0.85rem; font-weight: 800; color: #444; }
+        .att-table td { padding: 1.5rem 1rem; border-bottom: 1px solid #eee; font-weight: 600; font-size: 0.95rem; }
+        .extra-hours { font-weight: 800; }
+
+        /* --- TIME OFF --- */
+        .timeoff-container { background: var(--glass-bg); backdrop-filter: blur(20px); border-radius: var(--radius-xl); margin-top: 2rem; padding: 2.5rem; box-shadow: var(--shadow-deep); }
+        .timeoff-title { font-size: 1.8rem; font-weight: 900; text-transform: uppercase; margin-bottom: 1.5rem; }
+        .btn-request-leave { background: #d8b4fe; color: #581c87; border: none; padding: 10px 24px; border-radius: 8px; font-weight: 800; text-transform: uppercase; cursor: pointer; box-shadow: 0 4px 6px rgba(0,0,0,0.1); margin-bottom: 2rem; transition: transform 0.2s; }
+        .btn-request-leave:hover { transform: translateY(-2px); box-shadow: 0 6px 12px rgba(0,0,0,0.15); }
+        .balance-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 4rem; margin-bottom: 2rem; border-bottom: 2px solid #f0f0f0; padding-bottom: 2rem; }
+        .balance-card { text-align: center; }
+        .balance-title { font-size: 1.1rem; font-weight: 800; color: var(--primary-blue); margin-bottom: 0.5rem; text-transform: uppercase; }
+        .balance-days { font-size: 2rem; font-weight: 900; color: black; }
+        .balance-sub { font-size: 0.8rem; color: #666; font-weight: 600; text-transform: uppercase; }
+        .status-pill { padding: 4px 12px; border-radius: 20px; font-size: 0.75rem; font-weight: 800; text-transform: uppercase; }
+        .st-pending { background: #fef3c7; color: #d97706; } .st-approved { background: #d1fae5; color: #059669; }
+
+        /* --- PROFILE --- */
+        .profile-container { background: var(--glass-bg); backdrop-filter: blur(20px); border-radius: var(--radius-xl); margin-top: 2rem; padding: 3rem; box-shadow: var(--shadow-deep); position: relative; padding-bottom: 5rem; }
+        .btn-edit-profile { position: absolute; top: 3rem; right: 3rem; background: black; color: white; border: none; padding: 8px 20px; border-radius: 20px; font-weight: 700; cursor: pointer; text-transform: uppercase; font-size: 0.8rem; letter-spacing: 1px; z-index: 10; }
+        .btn-edit-profile.editing { background: var(--status-present); }
+        .profile-header-grid { display: grid; grid-template-columns: 200px 1fr 1fr; gap: 3rem; border-bottom: 1px solid #eee; padding-bottom: 3rem; margin-bottom: 2rem; }
+        .avatar-large-wrapper { position: relative; width: 160px; height: 160px; margin: 0 auto; }
+        .avatar-large { width: 100%; height: 100%; border-radius: 50%; object-fit: cover; border: 4px solid black; filter: grayscale(100%); }
+        .edit-icon { position: absolute; bottom: 10px; right: 10px; background: black; color: white; width: 36px; height: 36px; border-radius: 50%; display: grid; place-items: center; cursor: pointer; }
+        .form-group { margin-bottom: 1.2rem; }
+        .form-label { display: block; font-size: 0.75rem; font-weight: 800; color: #666; text-transform: uppercase; margin-bottom: 0.3rem; }
+        .form-input { width: 100%; background: transparent; border: none; border-bottom: 2px solid transparent; padding: 8px 0; font-size: 1.1rem; font-weight: 600; color: black; outline: none; transition: 0.3s; }
+        .form-input.editable { border-bottom: 2px solid #ccc; }
+        .form-input.editable:focus { border-bottom-color: black; }
+        .form-input[readonly] { cursor: default; }
+        .tabs { display: flex; gap: 2rem; margin-bottom: 2.5rem; border-bottom: 2px solid #f0f0f0; }
+        .tab-btn { padding: 1rem 0; background: none; border: none; font-size: 0.9rem; font-weight: 600; color: #999; cursor: pointer; position: relative; text-transform: uppercase; letter-spacing: 1px; }
+        .tab-btn.active { color: black; font-weight: 900; }
+        .tab-btn.active::after { content: ''; position: absolute; bottom: -2px; left: 0; width: 100%; height: 3px; background: black; }
+        .tab-content { display: none; }
+        .tab-content.active-tab { display: block; animation: fadeIn 0.3s; }
+        .section-header { font-size: 1.2rem; font-weight: 800; margin-bottom: 1.5rem; border-bottom: 2px solid black; padding-bottom: 0.5rem; display: inline-block; }
+        .action-bar-sticky { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background: black; color: white; padding: 15px 40px; border-radius: 50px; box-shadow: 0 10px 30px rgba(0,0,0,0.3); display: flex; gap: 20px; align-items: center; z-index: 200; cursor: pointer; transition: transform 0.2s; }
+
+        /* --- MODALS FIXED --- */
+        .modal-overlay {
+            position: fixed; inset: 0; background: rgba(0,0,0,0.85); backdrop-filter: blur(5px);
+            display: none; /* Default Hidden */
+            justify-content: center; align-items: center; z-index: 1000;
+        }
+        .modal { background: white; padding: 2.5rem; border-radius: var(--radius-xl); text-align: center; position: relative; box-shadow: var(--shadow-deep); }
+        .close-btn { position: absolute; top: 1.5rem; right: 1.5rem; background: none; border: none; font-size: 1.5rem; cursor: pointer; font-weight: bold; }
+        
+        .request-modal { width: 550px; text-align: left; padding: 2.5rem; }
+        .req-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem; border-bottom: 1px solid #eee; padding-bottom: 1rem; }
+        .req-title { font-weight: 800; font-size: 1.2rem; text-transform: uppercase; }
+        .req-row { display: grid; grid-template-columns: 140px 1fr; gap: 1rem; align-items: center; margin-bottom: 1.5rem; }
+        .req-label { font-size: 0.9rem; font-weight: 700; color: var(--black); }
+        .req-value { font-size: 1rem; font-weight: 600; color: var(--primary-blue); }
+        .req-select, .req-date { width: 100%; padding: 8px 12px; border: 1px solid #ccc; border-radius: 8px; color: var(--primary-blue); font-weight: 600; background: white; }
+        .upload-btn { background: var(--primary-blue); color: white; border: none; width: 36px; height: 36px; border-radius: 8px; display: flex; align-items: center; justify-content: center; cursor: pointer; }
+        .req-footer { display: flex; gap: 1rem; margin-top: 3rem; }
+        .btn-submit { background: var(--primary-purple); color: white; padding: 10px 24px; border-radius: 6px; font-weight: 700; border: none; cursor: pointer; text-transform: uppercase; font-size: 0.9rem; }
+        .btn-discard { background: #cbd5e1; color: #333; padding: 10px 24px; border-radius: 6px; font-weight: 700; border: none; cursor: pointer; text-transform: uppercase; font-size: 0.9rem; }
+        .btn-full-profile { background: black; color: white; border: none; padding: 12px 30px; border-radius: 30px; margin-top: 1.5rem; font-weight: bold; cursor: pointer; width: 100%; text-transform: uppercase; letter-spacing: 1px; }
+
+    </style>
+</head>
+<body>
+
+    <!-- HEADER -->
+    <header>
+        <div class="brand">
+            <div class="logo-icon">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76"/></svg>
+            </div>
+            <div class="brand-text">DayFlow</div>
+        </div>
+        <nav class="nav-links">
+            <a onclick="switchView('dashboard')" id="nav-dashboard" class="active">Employees</a>
+            <a onclick="switchView('attendance')" id="nav-attendance">Attendance</a>
+            <a onclick="switchView('timeoff')" id="nav-timeoff">Time Off</a>
+        </nav>
+        <div class="header-controls">
+             <div class="status-toggle" id="checkInBtn" onclick="toggleAttendance()">
+                <div class="status-dot" id="statusDot"></div>
+                <span class="status-text" id="statusText">Check In</span>
+            </div>
+            <div class="avatar-mini" onclick="toggleDropdown()">
+                <img src="https://randomuser.me/api/portraits/men/34.jpg" alt="User">
+            </div>
+            <div class="dropdown" id="userDropdown">
+                <div class="dropdown-item" onclick="switchView('profile')">My Profile</div>
+                <div class="dropdown-item" style="color:red;" onclick="location.href='empsignin.html'">Log Out</div>
+            </div>
+        </div>
+    </header>
+
+    <!-- 1. DASHBOARD VIEW -->
+    <div id="dashboard-view" class="view-section active">
+        <div class="quote-section">
+            <div class="quote-text">“The only way to do great work is to love what you do.”</div>
+            <div class="quote-author">— Steve Jobs</div>
+        </div>
+
+        <div class="controls-row">
+            <input type="text" id="empSearch" class="search-bar" placeholder="Search Directory..." onkeyup="filterEmployees()">
+        </div>
+        <div class="grid" id="employeeGrid"></div>
+    </div>
+
+    <!-- 2. ATTENDANCE VIEW -->
+    <div id="attendance-view" class="view-section">
+        <div class="att-container">
+            <div class="att-title">My Attendance</div>
+
+            <!-- Controls -->
+            <div class="att-controls">
+                <button class="nav-btn" onclick="changeMonth(-1)">←</button>
+                <div class="month-display" id="calMonthDisplay">October 2025</div>
+                <button class="nav-btn" onclick="changeMonth(1)">→</button>
+                
+                <div class="stat-box"><span class="stat-label">Present</span><span class="stat-val" id="statPresent">0</span></div>
+                <div class="stat-box"><span class="stat-label">Leaves</span><span class="stat-val" id="statLeave">0</span></div>
+                <div class="stat-box" style="background:black; color:white;"><span class="stat-label" style="color:#ccc;">Payable Days</span><span class="stat-val" id="statPayable">0</span></div>
+            </div>
+
+            <!-- Calendar Grid -->
+            <div class="calendar-wrapper">
+                <div class="calendar-grid">
+                    <div class="cal-header">Sun</div><div class="cal-header">Mon</div><div class="cal-header">Tue</div>
+                    <div class="cal-header">Wed</div><div class="cal-header">Thu</div><div class="cal-header">Fri</div><div class="cal-header">Sat</div>
+                    <div id="calendarDays" style="display:contents;"></div>
+                </div>
+            </div>
+
+            <!-- Details Table -->
+            <div class="table-wrapper">
+                <div style="margin-bottom: 1rem; font-weight: 700; font-size: 1.1rem;">Details for <span id="selDateTxt" style="font-weight:400; color:#666;">(Select a date)</span></div>
+                <table>
+                    <thead><tr><th>Date</th><th>Check In</th><th>Check Out</th><th>Work Hours</th><th>Overtime</th></tr></thead>
+                    <tbody id="attTableBody"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- 3. TIME OFF VIEW -->
+    <div id="timeoff-view" class="view-section">
+        <div class="timeoff-container">
+            <div class="timeoff-title">Time Off</div>
+            <button class="btn-request-leave" onclick="openLeaveModal()">+ New</button>
+            <div class="balance-grid">
+                <div class="balance-card"><div class="balance-title">Paid Time Off</div><div class="balance-days">24</div><div class="balance-sub">Days Available</div></div>
+                <div class="balance-card"><div class="balance-title" style="color:#059669;">Sick Time Off</div><div class="balance-days">07</div><div class="balance-sub">Days Available</div></div>
+            </div>
+            <table class="att-table">
+                <thead><tr><th>Name</th><th>Start Date</th><th>End Date</th><th>Type</th><th>Status</th></tr></thead>
+                <tbody>
+                    <tr><td>Aarav Patel</td><td>28/10/2025</td><td>28/10/2025</td><td style="color:#3b82f6; font-weight:800;">Paid time Off</td><td><span class="status-pill st-pending">Pending</span></td></tr>
+                    <tr><td>Aarav Patel</td><td>15/09/2025</td><td>16/09/2025</td><td style="color:#059669; font-weight:800;">Sick time Off</td><td><span class="status-pill st-approved">Approved</span></td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- 4. PROFILE VIEW (Editable) -->
+    <div id="profile-view" class="view-section">
+        <div class="profile-container">
+            <button class="btn-edit-profile" id="editProfileBtn" onclick="toggleEditProfile()">Edit Profile</button>
+            <h1 style="font-weight: 900; font-size: 2rem; margin-bottom: 2rem; text-transform: uppercase;">My Profile</h1>
+            
+            <div class="profile-header-grid">
+                <div class="col-avatar">
+                    <div class="avatar-large-wrapper">
+                        <img src="https://randomuser.me/api/portraits/men/34.jpg" class="avatar-large">
+                        <div class="edit-icon" onclick="alert('Upload Photo...')">✎</div>
+                    </div>
+                </div>
+                <div class="col-details">
+                    <div class="form-group"><label class="form-label">Full Name</label><input type="text" class="form-input" id="profName" value="Aarav Patel" readonly></div>
+                    <div class="form-group"><label class="form-label">Job Position</label><input type="text" class="form-input" id="profRole" value="Senior Product Designer" readonly></div>
+                    <div class="form-group"><label class="form-label">Email</label><input type="email" class="form-input" id="profEmail" value="aarav.patel@dayflow.com" readonly></div>
+                </div>
+                <div class="col-company">
+                    <div class="form-group"><label class="form-label">Company</label><input type="text" class="form-input" value="DayFlow Solutions" readonly></div>
+                    <div class="form-group"><label class="form-label">Location</label><input type="text" class="form-input" value="Bangalore, India" readonly></div>
+                </div>
+            </div>
+
+            <div class="tabs">
+                <button class="tab-btn active" onclick="openTab('private', this)">Private Info</button>
+                <button class="tab-btn" onclick="openTab('resume', this)">Resume</button>
+                <button class="tab-btn" onclick="openTab('salary', this)">Salary</button>
+            </div>
+
+            <div id="private" class="tab-content active-tab">
+                <div style="display:grid; grid-template-columns:1fr 1fr; gap:3rem;">
+                    <div><h3 class="section-header">Personal</h3><div class="form-group"><label class="form-label">Phone</label><input type="text" class="form-input" id="profPhone" value="+91 9876543210" readonly></div></div>
+                    <div><h3 class="section-header">Bank</h3><div class="form-group"><label class="form-label">Account No</label><input type="text" class="form-input" id="profBank" value="501009988772" readonly></div></div>
+                </div>
+            </div>
+            <div id="resume" class="tab-content"><textarea class="form-input" id="profResume" rows="5" readonly>Senior Designer with 7 years experience...</textarea></div>
+            <div id="salary" class="tab-content"><p style="color:red; font-weight:bold; padding:2rem;">Restricted Area.</p></div>
+
+            <div class="action-bar-sticky" onclick="saveAndClose()"><span style="font-weight:800; font-size:0.9rem;">Save Changes & Close</span></div>
+        </div>
+    </div>
+
+    <!-- MODAL (Employee Preview) -->
+    <div class="modal-overlay" id="modalOverlay" onclick="if(event.target===this) closeModal()">
+        <div class="modal" style="width:450px;">
+            <button class="close-btn" onclick="closeModal()">×</button>
+            <img id="mImg" src="" style="width:120px; height:120px; border-radius:50%; margin-bottom:1.5rem; filter:grayscale(100%); border:4px solid black;">
+            <h2 id="mName" style="font-weight:900; font-size:1.8rem;">Name</h2>
+            <p id="mRole" style="color:gray; font-size:0.9rem; font-weight:600;">Role</p>
+        </div>
+    </div>
+
+    <!-- REQUEST LEAVE MODAL -->
+    <div class="modal-overlay" id="leaveModal" onclick="if(event.target===this) closeLeaveModal()">
+        <div class="modal request-modal">
+            <div class="req-header">
+                <div class="req-title">Time off Type Request</div>
+                <span style="cursor:pointer; font-size:1.5rem;" onclick="closeLeaveModal()">✕</span>
+            </div>
+            <div class="req-row"><div class="req-label">Employee</div><div class="req-value">Aarav Patel</div></div>
+            <div class="req-row">
+                <div class="req-label">Time off Type</div>
+                <select class="req-select"><option>Paid Time off</option><option>Sick Leave</option><option>Unpaid Leaves</option></select>
+            </div>
+            <div class="req-row">
+                <div class="req-label">Validity Period</div>
+                <div style="display:flex; gap:10px; align-items:center; color:#2563eb; font-weight:600;">
+                    <input type="date" class="req-date" value="2025-05-13"> To <input type="date" class="req-date" value="2025-05-14">
+                </div>
+            </div>
+            <div class="req-row"><div class="req-label">Allocation</div><div class="req-value">01.00 <span style="font-size:0.9rem;">Days</span></div></div>
+            <div class="req-row">
+                <div class="req-label">Attachment:</div>
+                <div style="display:flex; align-items:center; gap:10px;">
+                    <button class="upload-btn">⬆</button><span style="font-size:0.8rem; color:#666;">(For sick leave certificate)</span>
+                </div>
+            </div>
+            <div class="req-footer">
+                <button class="btn-submit" onclick="submitLeave()">Submit</button>
+                <button class="btn-discard" onclick="closeLeaveModal()">Discard</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // --- DATA & DASHBOARD ---
+        const employees = [
+            { id: 0, name: "Aarav Patel", role: "Senior Product Designer", status: "present", img: "https://randomuser.me/api/portraits/men/34.jpg", isMe: true },
+            { id: 1, name: "Diya Sharma", role: "Product Manager", status: "present", img: "https://randomuser.me/api/portraits/women/22.jpg" },
+            { id: 2, name: "Arjun Singh", role: "Lead Developer", status: "leave", img: "https://randomuser.me/api/portraits/men/44.jpg" },
+            { id: 3, name: "Vihaan Gupta", role: "Data Scientist", status: "half", img: "https://randomuser.me/api/portraits/men/86.jpg" }
+        ];
+
+        // --- GRID RENDERING LOGIC ---
+        function renderGrid(data) {
+            const grid = document.getElementById('employeeGrid');
+            grid.innerHTML = ''; // Clear existing
+            
+            data.forEach(emp => {
+                const card = document.createElement('div');
+                card.className = 'card';
+                card.onclick = () => openModal(emp);
+                
+                // Color Logic
+                let color = 'black'; 
+                if(emp.status === 'present') color = 'var(--status-present)';
+                else if(emp.status === 'leave') color = 'var(--status-leave)';
+                else if(emp.status === 'half') color = 'var(--status-half)';
+
+                card.innerHTML = `
+                    <div class="card-status-indicator" style="color: ${color};" title="${emp.status.toUpperCase()}">●</div>
+                    <img src="${emp.img}" class="card-img">
+                    <h3>${emp.name}</h3>
+                    <p>${emp.role}</p>
+                    <div class="card-footer">
+                        <div><span class="stat-val">98%</span><span class="stat-label">Attend</span></div>
+                        <div><span class="stat-val" style="color:${color}; text-transform:capitalize;">${emp.status}</span><span class="stat-label">Status</span></div>
+                    </div>
+                `;
+                grid.appendChild(card);
+            });
+        }
+        
+        // Initial Render
+        renderGrid(employees);
+
+        // --- SEARCH FUNCTION ---
+        function filterEmployees() {
+            const query = document.getElementById('empSearch').value.toLowerCase();
+            const filtered = employees.filter(e => e.name.toLowerCase().includes(query));
+            renderGrid(filtered);
+        }
+
+        // --- NAVIGATION ---
+        function switchView(viewName) {
+            document.querySelectorAll('.view-section').forEach(v => v.classList.remove('active'));
+            document.querySelectorAll('.nav-links a').forEach(l => l.classList.remove('active'));
+            document.getElementById(viewName + '-view').classList.add('active');
+            if(viewName==='dashboard') document.getElementById('nav-dashboard').classList.add('active');
+            if(viewName==='attendance') { document.getElementById('nav-attendance').classList.add('active'); renderCalendar(); }
+            if(viewName==='profile') window.scrollTo(0,0);
+            if(viewName==='timeoff') document.getElementById('nav-timeoff').classList.add('active');
+            closeDropdown();
+        }
+
+        // --- CALENDAR LOGIC (ROBUST) ---
+        let currDate = new Date(); // Current viewing date state
+
+        function renderCalendar() {
+            const year = currDate.getFullYear();
+            const month = currDate.getMonth();
+            const firstDay = new Date(year, month, 1).getDay(); // 0=Sun
+            const daysInMonth = new Date(year, month + 1, 0).getDate();
+            
+            const monthNames = ["January","February","March","April","May","June","July","August","September","October","November","December"];
+            document.getElementById('calMonthDisplay').innerText = `${monthNames[month]} ${year}`;
+
+            const calGrid = document.getElementById('calendarDays');
+            calGrid.innerHTML = '';
+
+            let pCount=0, lCount=0;
+
+            for(let i=0; i<firstDay; i++) {
+                calGrid.innerHTML += `<div class="empty-day"></div>`;
+            }
+
+            for(let day=1; day<=daysInMonth; day++) {
+                const dateStr = `${year}-${String(month+1).padStart(2,'0')}-${String(day).padStart(2,'0')}`;
+                const dayOfWeek = new Date(year, month, day).getDay();
+                let status = 'Present';
+                let dotClass = 'c-present';
+
+                if(dayOfWeek === 0 || dayOfWeek === 6) { status = 'Weekend'; dotClass = 'c-weekend'; }
+                else if(day === 5 || day === 15) { status = 'Leave'; dotClass = 'c-leave'; lCount++; }
+                else if(day === 12) { status = 'Absent'; dotClass = 'c-absent'; }
+                else { pCount++; }
+
+                const dayEl = document.createElement('div');
+                dayEl.className = 'cal-day';
+                dayEl.onclick = () => selectDate(dayEl, dateStr, status);
+                dayEl.innerHTML = `<div class="cal-date">${day}</div><div class="cal-status-dot ${dotClass}"></div>`;
+                calGrid.appendChild(dayEl);
+            }
+
+            document.getElementById('statPresent').innerText = pCount;
+            document.getElementById('statLeave').innerText = lCount;
+            document.getElementById('statPayable').innerText = pCount + lCount;
+        }
+
+        function changeMonth(offset) {
+            currDate.setMonth(currDate.getMonth() + offset);
+            renderCalendar();
+            document.getElementById('attTableBody').innerHTML = '';
+            document.getElementById('selDateTxt').innerText = "(Select a date)";
+        }
+
+        function selectDate(el, dateStr, status) {
+            document.querySelectorAll('.cal-day').forEach(d => d.classList.remove('selected'));
+            el.classList.add('selected');
+            document.getElementById('selDateTxt').innerText = dateStr;
+            
+            const tbody = document.getElementById('attTableBody');
+            tbody.innerHTML = '';
+            let inT='-', outT='-', work='-', extra='-';
+            if(status === 'Present') { inT='10:00'; outT='19:00'; work='09:00'; extra='01:00'; }
+            
+            tbody.innerHTML = `<tr><td>${dateStr}</td><td>${inT}</td><td>${outT}</td><td>${work}</td><td style="font-weight:bold; color:${extra!=='00:00' && extra!=='-' ? '#3b82f6' : 'black'}">${extra}</td></tr>`;
+        }
+
+        // --- PROFILE EDITING ---
+        let isEditing = false;
+        function toggleEditProfile() {
+            isEditing = !isEditing;
+            const btn = document.getElementById('editProfileBtn');
+            const inputs = document.querySelectorAll('#profile-view .form-input');
+            if(isEditing) {
+                btn.innerText = "Cancel Editing";
+                btn.classList.add('editing');
+                inputs.forEach(inp => { if(!inp.parentElement.parentElement.classList.contains('col-company')) { inp.removeAttribute('readonly'); inp.classList.add('editable'); } });
+            } else {
+                btn.innerText = "Edit Profile";
+                btn.classList.remove('editing');
+                inputs.forEach(inp => { inp.setAttribute('readonly', true); inp.classList.remove('editable'); });
+            }
+        }
+        function saveAndClose() { if(isEditing) toggleEditProfile(); alert("Profile Updated!"); switchView('dashboard'); }
+
+        // --- MODALS & UTILS ---
+        function openModal(emp) {
+            document.getElementById('mName').innerText = emp.name;
+            document.getElementById('mRole').innerText = emp.role;
+            document.getElementById('mImg').src = emp.img;
+            document.getElementById('modalOverlay').style.display = 'flex';
+        }
+        function closeModal() { document.getElementById('modalOverlay').style.display = 'none'; }
+        
+        function openLeaveModal() { document.getElementById('leaveModal').style.display = 'flex'; }
+        function closeLeaveModal() { document.getElementById('leaveModal').style.display = 'none'; }
+        function submitLeave() { alert("Request Submitted!"); closeLeaveModal(); }
+
+        function toggleDropdown() { document.getElementById('userDropdown').classList.toggle('show'); }
+        function closeDropdown() { document.getElementById('userDropdown').classList.remove('show'); }
+        function openTab(tabId, btn) {
+            document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active-tab'));
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+            document.getElementById(tabId).classList.add('active-tab');
+            btn.classList.add('active');
+        }
+        let isCheckedIn = false;
+        function toggleAttendance() {
+            isCheckedIn = !isCheckedIn;
+            const dot = document.getElementById('statusDot');
+            const txt = document.getElementById('statusText');
+            if(isCheckedIn) { dot.classList.add('active'); txt.innerText = "Check Out"; } 
+            else { dot.classList.remove('active'); txt.innerText = "Check In"; }
+        }
+
+        // Init
+        renderCalendar();
+
+    </script>
+</body>
+</html>

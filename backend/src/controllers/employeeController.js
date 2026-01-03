@@ -1,4 +1,5 @@
 const { PrismaClient } = require('@prisma/client');
+const admin = require('firebase-admin');
 const prisma = new PrismaClient();
 
 /**
@@ -60,7 +61,7 @@ exports.createEmployee = async (req, res) => {
       });
     }
 
-    // Check if email already exists
+    // Check if email already exists in database
     const existingEmployee = await prisma.employee.findUnique({
       where: { email },
     });
@@ -68,18 +69,40 @@ exports.createEmployee = async (req, res) => {
       return res.status(409).json({ error: 'Email already exists' });
     }
 
+    // Check if email already exists in Firebase
+    try {
+      await admin.auth().getUserByEmail(email);
+      return res.status(409).json({ error: 'Email already exists in authentication system' });
+    } catch (err) {
+      // Expected - user should not exist
+      if (err.code !== 'auth/user-not-found') {
+        throw err;
+      }
+    }
+
     // Generate Employee ID and temporary password
     const employeeId = await generateEmployeeId();
     const temporaryPassword = generateTemporaryPassword();
 
-    // Generate Firebase UID (placeholder - actual Firebase creation handled by frontend/auth service)
-    const firebaseUid = `firebase-uid-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+    // Create Firebase user with temporary password
+    let firebaseUser;
+    try {
+      firebaseUser = await admin.auth().createUser({
+        email,
+        password: temporaryPassword,
+        displayName: `${firstName} ${lastName}`,
+        disabled: false,
+      });
+    } catch (error) {
+      console.error('Firebase user creation error:', error);
+      return res.status(500).json({ error: 'Failed to create Firebase user: ' + error.message });
+    }
 
-    // Create employee in database
+    // Create employee in database with actual Firebase UID
     const newEmployee = await prisma.employee.create({
       data: {
         id: employeeId,
-        firebaseUid,
+        firebaseUid: firebaseUser.uid,
         email,
         firstName,
         lastName,
@@ -106,12 +129,12 @@ exports.createEmployee = async (req, res) => {
       },
       credentials: {
         temporaryPassword,
-        note: 'Employee must change password on first login. Share this securely.',
+        note: 'Employee must change password on first login. Share this securely with the employee.',
       },
     });
   } catch (error) {
     console.error('Error creating employee:', error);
-    res.status(500).json({ error: 'Failed to create employee' });
+    res.status(500).json({ error: 'Failed to create employee: ' + error.message });
   }
 };
 
