@@ -1,0 +1,160 @@
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ============================================================
+// ENUMS
+// ============================================================
+
+enum Role {
+  ADMIN
+  EMPLOYEE
+}
+
+enum AttendanceStatus {
+  PRESENT
+  ABSENT
+  HALF_DAY
+  LEAVE
+}
+
+enum LeaveType {
+  PAID
+  SICK
+  UNPAID
+}
+
+enum LeaveStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+// ============================================================
+// MODELS
+// ============================================================
+
+// Employee Model - Root Entity
+// Identified by Firebase UID, no User table
+model Employee {
+  id                    String                 @id @default(cuid())
+  firebaseUid           String                 @unique
+  role                  Role                   @default(EMPLOYEE)
+  
+  // Personal Details
+  firstName             String
+  lastName              String
+  email                 String                 @unique
+  phone                 String?
+  address               String?
+  profilePictureUrl     String?
+  
+  // Job Details
+  employeeId            String                 @unique
+  jobTitle              String
+  department            String
+  dateOfJoining         DateTime
+  
+  // Relations
+  attendance            Attendance[]
+  leaveRequests         LeaveRequest[]
+  leaveApprovalsGiven   LeaveRequest[]         @relation("ApprovedBy")
+  payroll               Payroll[]
+  
+  // Timestamps
+  createdAt             DateTime               @default(now())
+  updatedAt             DateTime               @updatedAt
+
+  @@index([firebaseUid])
+  @@index([role])
+  @@map("employees")
+}
+
+// Attendance Model
+model Attendance {
+  id                    String                 @id @default(cuid())
+  employeeId            String
+  employee              Employee               @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+  
+  date                  DateTime               @db.Date
+  status                AttendanceStatus       @default(PRESENT)
+  checkInTime           DateTime?
+  checkOutTime          DateTime?
+  remarks               String?
+  
+  // Timestamps
+  createdAt             DateTime               @default(now())
+  updatedAt             DateTime               @updatedAt
+
+  @@unique([employeeId, date])
+  @@index([employeeId])
+  @@index([date])
+  @@map("attendance")
+}
+
+// Leave Request Model
+model LeaveRequest {
+  id                    String                 @id @default(cuid())
+  employeeId            String
+  employee              Employee               @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+  
+  leaveType             LeaveType              @default(PAID)
+  startDate             DateTime               @db.Date
+  endDate               DateTime               @db.Date
+  numberOfDays          Float
+  reason                String
+  remarks               String?
+  
+  status                LeaveStatus            @default(PENDING)
+  approvedById          String?
+  approvedBy            Employee?              @relation("ApprovedBy", fields: [approvedById], references: [id], onDelete: SetNull)
+  approvalComments      String?
+  approvalDate          DateTime?
+  
+  // Timestamps
+  createdAt             DateTime               @default(now())
+  updatedAt             DateTime               @updatedAt
+
+  @@index([employeeId])
+  @@index([status])
+  @@index([startDate])
+  @@index([endDate])
+  @@map("leave_requests")
+}
+
+// Payroll Model
+model Payroll {
+  id                    String                 @id @default(cuid())
+  employeeId            String
+  employee              Employee               @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+  
+  month                 Int                    // 1-12
+  year                  Int
+  
+  // Salary Structure
+  baseSalary            Float
+  allowances            Float                  @default(0)
+  deductions            Float                  @default(0)
+  grossSalary           Float
+  netSalary             Float
+  
+  // Additional Info
+  paymentStatus         String                 @default("PENDING") // PENDING, PAID
+  paymentDate           DateTime?
+  remarks               String?
+  
+  // Timestamps
+  createdAt             DateTime               @default(now())
+  updatedAt             DateTime               @updatedAt
+
+  @@unique([employeeId, month, year])
+  @@index([employeeId])
+  @@index([paymentStatus])
+  @@map("payroll")
+}
