@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DayFlow | HR Personal Registration</title>
+    
+    <link rel="icon" type="image/png" href="favicon.png">
+    
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/17.0.8/css/intlTelInput.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/17.0.8/js/intlTelInput.min.js"></script>
+    
+    <style>
+        :root{--glass:rgba(255,255,255,0.92);--dark:#121212;--accent:#555;--err:#ff4d4d;--success:#00cc66;--input-bg:rgba(255,255,255,0.6);}
+        *{margin:0;padding:0;box-sizing:border-box;font-family:'Inter',sans-serif;}
+        
+        body{min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;background:#000;padding:40px 20px;overflow-x:hidden;}
+        
+        .bg-overlay{position:fixed;top:0;left:0;width:100%;height:100%;background:linear-gradient(rgba(0,0,0,0.65),rgba(0,0,0,0.65)),url('https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?auto=format&fit=crop&q=80&w=2000');background-size:cover;background-position:center;filter:grayscale(100%);z-index:-1;transition:transform 1.2s cubic-bezier(0.16, 1, 0.3, 1);}
+        body:hover .bg-overlay{transform:scale(1.05);}
+
+        .quote-box{text-align:center;margin-bottom:35px;z-index:1;animation:fadeInDown 0.8s ease-out;}
+        @keyframes fadeInDown{from{opacity:0;transform:translateY(-20px);}to{opacity:1;transform:translateY(0);}}
+        
+        .quote-text{color:#fff;font-size:2.5rem;font-weight:900;text-transform:uppercase;text-shadow:0 10px 30px #000;line-height:1.1;}
+        .quote-author{color:#ccc;display:block;margin-top:10px;letter-spacing:4px;font-size:1.1rem;font-weight:300;}
+
+        .signup-card{background:var(--glass);backdrop-filter:blur(20px);width:100%;max-width:450px;padding:45px 35px;border-radius:32px;box-shadow:0 30px 60px rgba(0,0,0,0.5);text-align:center;z-index:2;transition:all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);}
+        .signup-card:hover{transform:translateY(-8px) scale(1.01);box-shadow:0 40px 80px rgba(0,0,0,0.6);}
+
+        .brand{display:flex;align-items:center;justify-content:center;gap:12px;margin-bottom:10px;}
+        .logo-box{width:42px;height:42px;background:var(--dark);border-radius:12px;display:flex;align-items:center;justify-content:center;color:#fff;overflow:hidden;transition:transform 0.3s ease;}
+        .signup-card:hover .logo-box{transform:rotate(-5deg) scale(1.1);}
+        .logo-box img{width:100%;height:100%;object-fit:cover;}
+        .brand h1{font-size:32px;font-weight:900;letter-spacing:-2px;color:var(--dark);}
+
+        .hr-heading{color:var(--dark);font-size:18px;font-weight:800;letter-spacing:1px;text-transform:uppercase;margin-bottom:25px;opacity:0.8;display:flex;align-items:center;justify-content:center;gap:8px;}
+        .hr-heading::before, .hr-heading::after{content:"";height:2px;width:20px;background:var(--dark);opacity:0.2;}
+
+        .form-grid{display:flex;flex-direction:column;gap:14px;margin-bottom:20px;}
+        .input-row{position:relative;width:100%;display:flex;align-items:center;}
+        input{width:100%;padding:14px 16px;border-radius:12px;border:1px solid rgba(0,0,0,0.1);background:var(--input-bg);outline:none;font-size:14px;transition:0.3s;}
+        input:focus{border-color:var(--dark);background:#fff;box-shadow:0 0 0 4px rgba(0,0,0,0.05);}
+
+        .btn-google {
+            width: 100%;
+            padding: 12px;
+            border-radius: 12px;
+            background: #fff;
+            color: var(--dark);
+            border: 1px solid rgba(0,0,0,0.1);
+            font-weight: 700;
+            font-size: 14px;
+            cursor: pointer;
+            margin-top: 5px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            transition: 0.3s;
+        }
+        .btn-google:hover {
+            background: #f8f8f8;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+        }
+
+        .upload-wrapper{position:relative;display:inline-block;margin-left:10px;}
+        .upload-trigger{background:var(--dark);color:#fff;padding:12px;border-radius:10px;cursor:pointer;display:flex;align-items:center;transition:background 0.3s;}
+        .upload-trigger:hover{background:#333;}
+        .tooltip{visibility:hidden;background:#333;color:#fff;padding:6px 12px;border-radius:6px;position:absolute;bottom:125%;left:50%;transform:translateX(-50%);opacity:0;transition:0.3s;font-size:11px;white-space:nowrap;z-index:10;}
+        .upload-wrapper:hover .tooltip{visibility:visible;opacity:1;}
+
+        .iti{width:100%;}
+        .otp-btn{background:var(--dark);color:#fff;padding:10px 16px;border-radius:10px;font-size:12px;font-weight:700;cursor:pointer;display:none;border:none;margin-top:8px;width:100%;transition:all 0.3s;}
+        .otp-btn:hover{background:#000;transform:translateY(-2px);}
+        .otp-btn:disabled{background:#888;cursor:not-allowed;}
+        
+        .otp-actions{display:flex;gap:10px;margin-top:10px;}
+        .secondary-btn{background:#e0e0e0;color:var(--dark);flex:1;}
+        .secondary-btn:hover{background:#d0d0d0;}
+
+        .strength-meter{height:4px;width:100%;background:#ddd;margin-top:6px;border-radius:2px;overflow:hidden;}
+        .strength-bar{height:100%;width:0;transition:0.5s ease-out;}
+        .eye-btn{position:absolute;right:15px;top:13px;cursor:pointer;color:rgba(0,0,0,0.4);background:none;border:none;transition:color 0.3s;}
+        .eye-btn:hover{color:var(--dark);}
+
+        .btn-signup{width:100%;padding:16px;border-radius:14px;background:var(--dark);color:#fff;border:none;font-weight:800;font-size:16px;cursor:pointer;margin-top:15px;transition:all 0.3s;}
+        .btn-signup:hover{background:#000;transform:scale(1.02);box-shadow:0 10px 20px rgba(0,0,0,0.1);}
+
+        .login-link{margin-top:25px;font-size:14px;color:#444;}
+        .login-link a{color:black;font-weight:800;text-decoration:none;border-bottom:2px solid black;transition:opacity 0.3s;}
+        .login-link a:hover{opacity:0.7;}
+
+        #msg{font-size:12px;margin-top:12px;font-weight:700;min-height:18px;}
+        .hidden{display:none;}
+    </style>
+</head>
+<body>
+
+    <div class="bg-overlay"></div>
+
+    <div class="quote-box">
+        <h2 class="quote-text">“Success is the sum of small efforts,<br>repeated day-in and day-out.”</h2>
+        <span class="quote-author">— ROBERT COLLIER</span>
+    </div>
+
+    <div class="signup-card">
+        <div class="brand">
+            <div class="logo-box" id="brand-logo"><i data-lucide="user-check" size="24"></i></div>
+            <h1>DayFlow</h1>
+        </div>
+
+        <h2 class="hr-heading"><i data-lucide="user-plus" size="18"></i> CREATE HR ACCOUNT</h2>
+
+        <form id="signupForm" onsubmit="return false;">
+            <div class="form-grid">
+                
+                <div class="input-row">
+                    <input type="text" id="fullName" placeholder="Full Legal Name :-" required>
+                    <div class="upload-wrapper">
+                        <label for="logo-in" class="upload-trigger"><i data-lucide="camera" size="18"></i></label>
+                        <span class="tooltip">Upload Profile Photo</span>
+                    </div>
+                    <input type="file" id="logo-in" class="hidden" accept="image/*">
+                </div>
+
+                <input type="email" id="email" placeholder="Personal Gmail / Work Email :-" required>
+                
+                <div style="text-align:left;">
+                    <input type="tel" id="phone" required>
+                    <button type="button" id="otp-gen-btn" class="otp-btn" onclick="sendOTP()">Verify Mobile Number</button>
+                    <div id="recaptcha-container"></div>
+                </div>
+
+                <button type="button" class="btn-google" onclick="signUpWithGoogle()">
+                    <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" width="16" alt="Google">
+                    Quick Signup with Google
+                </button>
+
+                <div id="otp-section" class="hidden">
+                    <input type="text" id="otp-code" placeholder="Enter 6-digit OTP" maxlength="6" style="text-align:center; letter-spacing:6px; font-weight:bold;">
+                    <div class="otp-actions">
+                        <button type="button" class="otp-btn secondary-btn" id="resend-btn" onclick="sendOTP()" style="display:block;">Resend <span id="timer"></span></button>
+                        <button type="button" class="otp-btn" id="confirm-btn" onclick="verifyOTP()" style="display:block;">Confirm Code</button>
+                    </div>
+                </div>
+
+                <div class="input-row" style="flex-direction:column; align-items:flex-start;">
+                    <div style="position:relative; width:100%;">
+                        <input type="password" id="p1" placeholder="Create Secure Password :-" required oninput="handlePassCheck()">
+                        <button type="button" class="eye-btn" onclick="togglePass('p1', this)"><i data-lucide="eye-off" size="18"></i></button>
+                    </div>
+                    <div class="strength-meter"><div class="strength-bar" id="meter"></div></div>
+                    <p id="strength-label" style="font-size:11px; margin-top:4px; font-weight:700;"></p>
+                </div>
+
+                <div class="input-row">
+                    <input type="password" id="p2" placeholder="Confirm Your Password :-" required>
+                </div>
+            </div>
+
+            <button class="btn-signup" id="final-submit" onclick="processSignup()">Finalize Registration</button>
+        </form>
+
+        <p id="msg"></p>
+
+        <div class="login-link">
+            Already have an account? <a href="hrsignin.html">Log In Here</a>
+        </div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+        import { 
+            getAuth, 
+            createUserWithEmailAndPassword, 
+            RecaptchaVerifier, 
+            signInWithPhoneNumber,
+            GoogleAuthProvider,
+            signInWithPopup 
+        } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyDOtYswAffd96SMW1_ZZ7j_hxpvvNoPd0E",
+            authDomain: "dayflow-423ca.firebaseapp.com",
+            projectId: "dayflow-423ca",
+            storageBucket: "dayflow-423ca.firebasestorage.app",
+            messagingSenderId: "450526966118",
+            appId: "1:450526966118:web:1ebe2b97bc33aff24358a7"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const provider = new GoogleAuthProvider();
+        
+        let confirmationResult;
+        let isPhoneVerified = false;
+        lucide.createIcons();
+
+        // Google Signup Logic
+        window.signUpWithGoogle = async () => {
+            const msg = document.getElementById('msg');
+            try {
+                const result = await signInWithPopup(auth, provider);
+                alert(`Welcome ${result.user.displayName}!`);
+                window.location.href = 'hrsignin.html';
+            } catch (error) {
+                msg.innerText = "Error: " + error.message;
+                msg.style.color = "#ff4d4d";
+            }
+        };
+
+        const phoneInput = document.querySelector("#phone");
+        const otpBtn = document.getElementById('otp-gen-btn');
+        const iti = window.intlTelInput(phoneInput, { preferredCountries: ["us", "in"], separateDialCode: true, utilsScript: "https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/17.0.8/js/utils.js" });
+
+        phoneInput.addEventListener('input', function() {
+            this.value = this.value.replace(/[^0-9]/g, '').slice(0, 10);
+            otpBtn.style.display = (this.value.length === 10 && !isPhoneVerified) ? "block" : "none";
+        });
+
+        let timerInterval;
+        function startTimer() {
+            let sec = 60;
+            const resend = document.getElementById('resend-btn');
+            const timeSpan = document.getElementById('timer');
+            resend.disabled = true;
+            clearInterval(timerInterval);
+            timerInterval = setInterval(() => {
+                sec--;
+                timeSpan.innerText = `(${sec}s)`;
+                if(sec <= 0) {
+                    clearInterval(timerInterval);
+                    resend.disabled = false;
+                    timeSpan.innerText = "";
+                }
+            }, 1000);
+        }
+
+        window.sendOTP = async () => {
+            const fullNumber = iti.getNumber();
+            window.recaptchaVerifier = new RecaptchaVerifier(auth, 'recaptcha-container', { 'size': 'invisible' });
+            try {
+                confirmationResult = await signInWithPhoneNumber(auth, fullNumber, window.recaptchaVerifier);
+                document.getElementById('otp-section').classList.remove('hidden');
+                document.getElementById('msg').innerText = "Security code sent.";
+                document.getElementById('msg').style.color = "#00cc66";
+                startTimer();
+            } catch (err) { 
+                document.getElementById('msg').innerText = "Failed: " + err.message; 
+                document.getElementById('msg').style.color = "#ff4d4d"; 
+            }
+        };
+
+        window.verifyOTP = async () => {
+            const code = document.getElementById('otp-code').value;
+            try {
+                await confirmationResult.confirm(code);
+                isPhoneVerified = true;
+                document.getElementById('otp-section').classList.add('hidden');
+                document.getElementById('otp-gen-btn').style.display = "none";
+                document.getElementById('msg').innerText = "Verified.";
+                document.getElementById('msg').style.color = "#00cc66";
+                phoneInput.disabled = true;
+            } catch (err) { 
+                document.getElementById('msg').innerText = "Invalid code."; 
+                document.getElementById('msg').style.color = "#ff4d4d"; 
+            }
+        };
+
+        window.handlePassCheck = () => {
+            const p = document.getElementById('p1').value, meter = document.getElementById('meter'), label = document.getElementById('strength-label');
+            let s = 0;
+            if (p.length >= 8) s++;
+            if (/[A-Z]/.test(p[0])) s++;
+            if (/[0-9]/.test(p)) s++;
+            if (/[^A-Za-z0-9]/.test(p)) s++;
+            const colors = ['#ddd', '#ff4d4d', '#ffcc00', '#00cc66', '#0099ff'];
+            meter.style.width = (s * 25) + "%";
+            meter.style.background = colors[s];
+            label.innerText = ["", "Weak", "Fair", "Strong", "Highly Secure"][s];
+            label.style.color = colors[s];
+        };
+
+        window.togglePass = (id, btn) => {
+            const el = document.getElementById(id);
+            el.type = el.type === 'password' ? 'text' : 'password';
+            btn.innerHTML = `<i data-lucide="${el.type === 'password' ? 'eye-off' : 'eye'}" size="18"></i>`;
+            lucide.createIcons();
+        };
+
+        window.processSignup = async () => {
+            const e = document.getElementById('email').value, p1 = document.getElementById('p1').value, p2 = document.getElementById('p2').value;
+            const msg = document.getElementById('msg');
+            msg.style.color = "#ff4d4d";
+            try {
+                if (!isPhoneVerified) throw new Error("Please verify phone number.");
+                if (p1 !== p2) throw new Error("Passwords mismatch.");
+                if (!/[A-Z]/.test(p1[0])) throw new Error("Start with a Capital letter.");
+                
+                await createUserWithEmailAndPassword(auth, e, p1);
+                alert("Account created!");
+                window.location.href = 'hrsignin.html';
+            } catch (err) { msg.innerText = err.message; }
+        };
+
+        document.getElementById('logo-in').onchange = e => {
+            const [file] = e.target.files;
+            if (file) {
+                const url = URL.createObjectURL(file);
+                document.getElementById('brand-logo').innerHTML = `<img src="${url}" style="width:100%;height:100%;object-fit:cover;border-radius:12px;">`;
+            }
+        };
+    </script>
+</body>
+</html>

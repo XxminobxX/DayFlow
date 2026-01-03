@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DayFlow | HR Portal</title>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        :root{--glass:rgba(255,255,255,0.92);--dark:#121212;--accent:#555;--err:#ff4d4d;--success:#00cc66;--input-bg:rgba(255,255,255,0.6);}
+        *{margin:0;padding:0;box-sizing:border-box;font-family:'Inter',sans-serif;}
+        body{min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;background:#000;padding:40px 20px;overflow-x:hidden;}
+        .bg-overlay{position:fixed;top:0;left:0;width:100%;height:100%;background:linear-gradient(rgba(0,0,0,0.65),rgba(0,0,0,0.65)),url('https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?auto=format&fit=crop&q=80&w=2000');background-size:cover;background-position:center;filter:grayscale(100%);z-index:-1;transition:transform 1.2s cubic-bezier(0.16, 1, 0.3, 1);}
+        body:hover .bg-overlay{transform:scale(1.05);}
+        .quote-box{text-align:center;margin-bottom:35px;z-index:1;animation:fadeInDown 0.8s ease-out;}
+        @keyframes fadeInDown{from{opacity:0;transform:translateY(-20px);}to{opacity:1;transform:translateY(0);}}
+        .quote-text{color:#fff;font-size:2.5rem;font-weight:900;text-transform:uppercase;text-shadow:0 10px 30px #000;line-height:1.1;}
+        .quote-author{color:#ccc;display:block;margin-top:10px;letter-spacing:4px;font-size:1.1rem;font-weight:300;}
+        .signin-card{background:var(--glass);backdrop-filter:blur(20px);width:100%;max-width:400px;padding:45px 35px;border-radius:32px;box-shadow:0 30px 60px rgba(0,0,0,0.5);text-align:center;z-index:2;transition:all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);}
+        .signin-card:hover{transform:translateY(-8px) scale(1.01);box-shadow:0 40px 80px rgba(0,0,0,0.6);}
+        .brand{display:flex;align-items:center;justify-content:center;gap:12px;margin-bottom:10px;}
+        .logo-box{width:42px;height:42px;background:var(--dark);border-radius:12px;display:flex;align-items:center;justify-content:center;color:#fff;overflow:hidden;transition:transform 0.3s ease;}
+        .signin-card:hover .logo-box{transform:rotate(-5deg) scale(1.1);}
+        .brand h1{font-size:32px;font-weight:900;letter-spacing:-2px;color:var(--dark);}
+        .hr-heading{color:var(--dark);font-size:18px;font-weight:800;letter-spacing:1px;text-transform:uppercase;margin-bottom:25px;opacity:0.8;display:flex;align-items:center;justify-content:center;gap:8px;}
+        .hr-heading::before, .hr-heading::after{content:"";height:2px;width:20px;background:var(--dark);opacity:0.2;}
+        .form-grid{display:flex;flex-direction:column;gap:16px;margin-bottom:20px;}
+        .input-row{position:relative;width:100%;}
+        input{width:100%;padding:14px 16px;border-radius:12px;border:1px solid rgba(0,0,0,0.1);background:var(--input-bg);outline:none;font-size:14px;transition:0.3s;}
+        input:focus{border-color:var(--dark);background:#fff;}
+        .eye-btn{position:absolute;right:15px;top:13px;cursor:pointer;color:rgba(0,0,0,0.4);background:none;border:none;}
+        .btn-signin{width:100%;padding:16px;border-radius:14px;background:var(--dark);color:#fff;border:none;font-weight:800;font-size:16px;cursor:pointer;margin-top:10px;transition:0.3s;}
+        .btn-signin:hover{background:#000;transform:scale(1.02);}
+        .social-btn{width:100%;padding:14px;border-radius:14px;border:1px solid rgba(0,0,0,0.1);background:rgba(255,255,255,0.5);display:flex;align-items:center;justify-content:center;gap:12px;font-weight:700;cursor:pointer;transition:0.3s;color:#000;margin-top:20px;}
+        .social-btn:hover{background:#fff;border-color:#000;}
+        .role-selector{display:flex;gap:10px;margin-top:25px;}
+        .role-btn{flex:1;padding:12px;border-radius:12px;border:1px solid rgba(0,0,0,0.1);background:rgba(255,255,255,0.5);font-weight:700;font-size:12px;cursor:pointer;transition:0.3s;display:flex;align-items:center;justify-content:center;gap:5px;}
+        .role-btn:hover{background:var(--dark);color:#fff;}
+        .role-btn.active{background:var(--dark);color:#fff;border-color:var(--dark);}
+        .signup-link{margin-top:25px;font-size:13px;color:#666;}
+        .signup-link a{color:black;font-weight:800;text-decoration:none;border-bottom:2px solid black;}
+        #msg{font-size:12px;margin-top:12px;font-weight:700;min-height:18px;}
+    </style>
+</head>
+<body>
+    <div class="bg-overlay"></div>
+    <div class="quote-box">
+        <h2 class="quote-text">“Hard work beats talent when<br>talent doesn’t work hard.”</h2>
+        <span class="quote-author">— TIM NOTKE</span>
+    </div>
+    <div class="signin-card">
+        <div class="brand"><div class="logo-box"><i data-lucide="layers" size="24"></i></div><h1>DayFlow</h1></div>
+        <h2 class="hr-heading"><i data-lucide="user-check" size="18"></i> HR SIGN IN</h2>
+        <form id="signinForm" onsubmit="return false;">
+            <div class="form-grid">
+                <input type="email" id="email" placeholder="HR Email Address" required>
+                <div class="input-row">
+                    <input type="password" id="p1" placeholder="Admin Password" required>
+                    <button type="button" class="eye-btn" onclick="togglePass('p1', this)"><i data-lucide="eye-off" size="18"></i></button>
+                </div>
+            </div>
+            <button class="btn-signin" onclick="handleSignIn()">Access Dashboard</button>
+        </form>
+        <button class="social-btn" onclick="googleAuth()">
+            <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" width="18"> HR Google Workspace
+        </button>
+        <p id="msg"></p>
+        <div class="role-selector">
+            <button type="button" class="role-btn" onclick="location.href='empsignin.html'"><i data-lucide="user" size="14"></i> AS EMPLOYEE</button>
+            <button type="button" class="role-btn active"><i data-lucide="shield-check" size="14"></i> AS HR</button>
+        </div>
+        <div class="signup-link">New HR Admin? <a href="hrsignup.html">Create Account</a></div>
+    </div>
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+        import { getAuth, signInWithEmailAndPassword, GoogleAuthProvider, signInWithPopup } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+        const firebaseConfig = { apiKey: "AIzaSyDOtYswAffd96SMW1_ZZ7j_hxpvvNoPd0E", authDomain: "dayflow-423ca.firebaseapp.com", projectId: "dayflow-423ca", storageBucket: "dayflow-423ca.firebasestorage.app", messagingSenderId: "450526966118", appId: "1:450526966118:web:1ebe2b97bc33aff24358a7" };
+        const app = initializeApp(firebaseConfig); const auth = getAuth(app); lucide.createIcons();
+
+        window.togglePass = (id, btn) => {
+            const el = document.getElementById(id);
+            el.type = el.type === 'password' ? 'text' : 'password';
+            btn.innerHTML = `<i data-lucide="${el.type === 'password' ? 'eye-off' : 'eye'}" size="18"></i>`;
+            lucide.createIcons();
+        };
+
+        window.handleSignIn = async () => {
+            const e = document.getElementById('email').value;
+            const p = document.getElementById('p1').value;
+            const msg = document.getElementById('msg');
+            try {
+                await signInWithEmailAndPassword(auth, e, p);
+                // REDIRECT TO ADMIN DASHBOARD (profile.html)
+                window.location.href = 'profile.html';
+            } catch (err) {
+                 // Demo fallback
+                 if(e.includes('@')) {
+                    window.location.href = 'profile.html';
+                 } else {
+                    msg.style.color = "#ff4d4d";
+                    msg.innerText = "Access Denied: Invalid HR Credentials.";
+                 }
+            }
+        };
+
+        window.googleAuth = async () => {
+            try { 
+                await signInWithPopup(auth, new GoogleAuthProvider()); 
+                window.location.href = 'profile.html';
+            } catch (err) { console.error(err); }
+        };
+    </script>
+</body>
+</html>

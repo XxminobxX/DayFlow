@@ -1,0 +1,579 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DayFlow | Admin Dashboard</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        /* --- VARIABLES --- */
+        :root {
+            --black: #000000;
+            --white: #ffffff;
+            --glass-bg: rgba(255, 255, 255, 0.96);
+            --shadow-deep: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+            --radius-xl: 28px;
+            --primary-red: #ef4444;
+            --primary-green: #22c55e;
+            --dark: #121212;
+            --input-bg: rgba(255,255,255,0.6);
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', sans-serif; }
+
+        body {
+            background-image: linear-gradient(rgba(0,0,0,0.85), rgba(0,0,0,0.85)),
+                              url('https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?q=80&w=2301&auto=format&fit=crop'); 
+            background-size: cover;
+            background-attachment: fixed;
+            min-height: 100vh;
+            color: var(--black);
+            display: flex; flex-direction: column; overflow-x: hidden;
+        }
+
+        /* --- HEADER --- */
+        header {
+            margin: 1.5rem auto; width: 92%; max-width: 1400px;
+            padding: 1rem 2rem;
+            background: var(--glass-bg); backdrop-filter: blur(12px);
+            border-radius: 50px;
+            display: flex; justify-content: space-between; align-items: center;
+            box-shadow: var(--shadow-deep); border: 1px solid rgba(255,255,255,0.4);
+            z-index: 100; position: sticky; top: 20px;
+        }
+
+        .brand { display: flex; align-items: center; gap: 0.8rem; }
+        .logo-icon { width: 40px; height: 40px; background: black; border-radius: 50%; display: grid; place-items: center; color: white; }
+        .brand-text { font-weight: 900; font-size: 1.4rem; text-transform: uppercase; color: white; mix-blend-mode: difference; }
+
+        .nav-links a { 
+            text-decoration: none; color: #666; font-weight: 600; 
+            font-size: 0.85rem; text-transform: uppercase; margin: 0 1.5rem; cursor: pointer; transition: 0.3s;
+        }
+        .nav-links a:hover, .nav-links a.active { color: var(--black); border-bottom: 2px solid black; }
+
+        .header-controls { display: flex; align-items: center; gap: 1.5rem; position: relative; }
+        .admin-tag { background: black; color: white; padding: 4px 12px; border-radius: 20px; font-size: 0.7rem; font-weight: 800; text-transform: uppercase; }
+        
+        .avatar-mini { 
+            width: 45px; height: 45px; border-radius: 50%; border: 2px solid white; cursor: pointer; 
+            background: #333; color: white; display: grid; place-items: center; font-weight: bold; overflow: hidden;
+        }
+        .avatar-mini img { width: 100%; height: 100%; object-fit: cover; }
+
+        .dropdown {
+            position: absolute; top: 60px; right: 0; background: white; width: 180px; padding: 0.5rem 0;
+            border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.3); display: none; flex-direction: column; overflow: hidden; animation: fadeIn 0.2s;
+        }
+        .dropdown.show { display: flex; }
+        .dropdown-item { padding: 12px 20px; font-size: 0.9rem; font-weight: 600; color: #333; cursor: pointer; transition: 0.2s; border-bottom: 1px solid #f0f0f0; }
+        .dropdown-item:hover { background: #f3f4f6; }
+
+        .view-section { display: none; width: 92%; max-width: 1400px; margin: 0 auto; padding-bottom: 50px; }
+        .view-section.active { display: block; animation: fadeIn 0.5s; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* --- DASHBOARD --- */
+        .quote-section { text-align: center; color: white; padding: 4rem 0 2rem 0; }
+        .quote-text { font-size: 2.2rem; font-weight: 900; text-transform: uppercase; text-shadow: 0 10px 30px rgba(0,0,0,0.8); line-height: 1.1; }
+        .quote-author { font-size: 0.9rem; opacity: 0.8; margin-top: 1rem; letter-spacing: 2px; text-transform: uppercase; }
+
+        .controls-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 3rem; margin-top: 3rem; }
+        .btn-new { background: white; color: black; padding: 12px 32px; border-radius: 50px; font-weight: 900; border: none; text-transform: uppercase; cursor: pointer; box-shadow: 0 5px 15px rgba(0,0,0,0.3); transition: 0.3s; }
+        .search-bar { background: rgba(255,255,255,0.9); border: 1px solid rgba(255,255,255,0.3); padding: 12px 24px; border-radius: 50px; width: 350px; color: black; font-size: 0.9rem; outline: none; transition: width 0.3s; }
+        .search-bar:focus { width: 450px; border-color: black; }
+
+        .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 2rem; }
+        .card { background: var(--glass-bg); border-radius: var(--radius-xl); padding: 2rem; text-align: center; cursor: pointer; transition: transform 0.3s; box-shadow: 0 10px 20px rgba(0,0,0,0.2); position: relative; display: flex; flex-direction: column; align-items: center; height: 380px; }
+        .card:hover { transform: scale(1.03) translateY(-10px); z-index: 10; box-shadow: var(--shadow-deep); }
+        .card-img { width: 100px; height: 100px; border-radius: 50%; object-fit: cover; filter: grayscale(100%); border: 4px solid #f0f0f0; margin-bottom: 1.5rem; }
+        .card h3 { font-size: 1.4rem; font-weight: 900; margin-bottom: 0.5rem; }
+        .card p { font-size: 0.85rem; font-weight: 600; color: #555; text-transform: uppercase; margin-bottom: 2rem; }
+        .card-footer { margin-top: auto; width: 100%; padding-top: 1.5rem; border-top: 1px solid #eee; display: flex; justify-content: space-around; }
+        .stat-val { font-weight: 900; font-size: 1.1rem; display: block; }
+        .stat-label { font-size: 0.7rem; color: #888; text-transform: uppercase; }
+
+        /* --- ATTENDANCE --- */
+        .admin-att-container { background: var(--glass-bg); backdrop-filter: blur(20px); border-radius: var(--radius-xl); margin-top: 2rem; padding: 2rem; box-shadow: var(--shadow-deep); }
+        .att-header-bar { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #000; padding-bottom: 1.5rem; margin-bottom: 1rem; }
+        .att-title { font-weight: 900; font-size: 1.8rem; text-transform: uppercase; }
+        .att-search { width: 350px; padding: 10px 20px; border: 2px solid #ccc; border-radius: 8px; font-size: 1rem; outline: none; background: white; }
+        .att-controls { display: flex; gap: 10px; align-items: center; margin-bottom: 2rem; }
+        .nav-sq-btn { width: 45px; height: 45px; border: 2px solid black; background: white; display: grid; place-items: center; font-weight: 900; cursor: pointer; border-radius: 6px; }
+        .date-picker-wrap { height: 45px; border: 2px solid black; border-radius: 6px; background: white; display: flex; align-items: center; padding: 0 1rem; font-weight: 700; min-width: 180px; }
+        input[type="date"] { border:none; background:transparent; font-family:'Inter'; font-weight:700; font-size:1rem; outline:none; cursor:pointer; }
+        .day-display { height: 45px; border: 2px solid #ccc; border-radius: 6px; background: #f3f4f6; display: flex; align-items: center; padding: 0 2rem; font-weight: 700; color: #555; text-transform: uppercase; }
+        
+        table { width: 100%; border-collapse: collapse; }
+        th { text-align: left; padding: 1rem; border-bottom: 2px solid black; text-transform: uppercase; font-size: 0.8rem; font-weight: 800; color: #333; }
+        td { padding: 1.2rem 1rem; border-bottom: 1px solid #eee; font-size: 0.95rem; font-weight: 600; color: #000; }
+
+        /* --- TIME OFF --- */
+        .time-off-container { background: var(--glass-bg); backdrop-filter: blur(20px); border-radius: var(--radius-xl); margin-top: 2rem; padding: 0; overflow: hidden; box-shadow: var(--shadow-deep); }
+        .to-tabs-row { display: flex; border-bottom: 1px solid #ccc; background: white; }
+        .to-tab { padding: 1rem 2rem; font-weight: 700; cursor: pointer; border-right: 1px solid #eee; background: #f9fafb; color: #666; }
+        .to-tab.active { background: #fecaca; color: black; border-bottom: 2px solid #ef4444; }
+        .to-toolbar { padding: 1.5rem 2rem; display: flex; justify-content: flex-end; align-items: center; border-bottom: 1px solid #eee; }
+        
+        .action-btn-group { display: flex; gap: 10px; }
+        .btn-approve, .btn-reject { color: white; border: none; padding: 6px 12px; border-radius: 4px; font-weight: 700; cursor: pointer; width: 35px; height: 35px; display: flex; align-items: center; justify-content: center; }
+        .btn-approve { background: var(--primary-green); } .btn-reject { background: var(--primary-red); }
+        .status-badge { padding: 5px 12px; border-radius: 20px; font-size: 0.75rem; font-weight: 800; text-transform: uppercase; }
+        .status-approved { background: #d1fae5; color: #065f46; } .status-rejected { background: #fee2e2; color: #991b1b; }
+
+        /* --- PROFILE MODAL --- */
+        .profile-container { background: var(--glass-bg); backdrop-filter: blur(20px); border-radius: var(--radius-xl); margin-top: 2rem; padding: 3rem; box-shadow: var(--shadow-deep); position: relative; padding-bottom: 6rem; }
+        .profile-header-grid { display: grid; grid-template-columns: 200px 1fr 1fr; gap: 3rem; border-bottom: 1px solid #eee; padding-bottom: 3rem; margin-bottom: 2rem; }
+        
+        .avatar-wrapper { position: relative; width: 140px; height: 140px; margin: 0 auto; }
+        .avatar-large { width: 100%; height: 100%; border-radius: 50%; object-fit: cover; border: 4px solid black; filter: grayscale(100%); }
+        .edit-overlay { position: absolute; inset: 0; background: rgba(0,0,0,0.6); border-radius: 50%; display: none; align-items: center; justify-content: center; color: white; font-weight: bold; cursor: pointer; font-size: 0.8rem; text-align: center; }
+        .avatar-wrapper:hover .edit-overlay { display: flex; }
+
+        .form-group { margin-bottom: 1.2rem; }
+        .form-label { display: block; font-size: 0.75rem; font-weight: 800; color: #666; text-transform: uppercase; margin-bottom: 0.3rem; }
+        .form-input { width: 100%; background: transparent; border: none; border-bottom: 2px solid #ccc; padding: 8px 0; font-size: 1.1rem; font-weight: 600; color: black; outline: none; transition: 0.3s; }
+        .form-input:focus { border-bottom-color: black; }
+        .form-input[readonly] { color: #888; border-bottom: 1px dotted #ccc; }
+
+        .tabs { display: flex; gap: 2rem; margin-bottom: 2.5rem; border-bottom: 2px solid #f0f0f0; }
+        .tab-btn { padding: 1rem 0; background: none; border: none; font-size: 0.9rem; font-weight: 600; color: #999; cursor: pointer; border-bottom: 2px solid transparent; transition: 0.3s; }
+        .tab-btn.active { color: black; font-weight: 900; border-bottom-color: black; }
+        .tab-content { display: none; }
+        .tab-content.active-tab { display: block; animation: fadeIn 0.3s; }
+
+        .salary-header { display: flex; gap: 2rem; background: #f9fafb; padding: 1.5rem; border-radius: 12px; margin-bottom: 2rem; align-items: flex-end; }
+        .big-input { font-size: 1.5rem; font-weight: 900; padding: 10px; border: 1px solid #ddd; border-radius: 8px; background: white; width: 100%; }
+        
+        .payroll-status-box { margin-top: 2rem; padding: 1.5rem; background: black; color: white; border-radius: 12px; display: flex; justify-content: space-between; align-items: center; }
+        .status-toggle-btn { background: white; color: black; border: none; padding: 8px 20px; border-radius: 20px; font-weight: 800; cursor: pointer; text-transform: uppercase; font-size: 0.8rem; }
+        .status-text-display { font-weight: 900; font-size: 1.2rem; text-transform: uppercase; letter-spacing: 1px; }
+        .st-credited { color: #4ade80; } .st-remaining { color: #f87171; }
+
+        .resume-textarea { width: 100%; height: 200px; padding: 1rem; border: 1px solid #ccc; border-radius: 8px; font-family: 'Inter'; font-size: 0.95rem; resize: none; background: #f9f9f9; }
+
+        .action-bar-sticky { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background: black; color: white; padding: 15px 40px; border-radius: 50px; box-shadow: 0 10px 30px rgba(0,0,0,0.3); display: flex; gap: 20px; align-items: center; z-index: 200; cursor: pointer; transition: transform 0.2s; }
+        .action-bar-sticky:hover { transform: translateX(-50%) scale(1.05); }
+
+        /* --- MODALS GENERAL --- */
+        .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.85); backdrop-filter: blur(5px); display: none; justify-content: center; align-items: center; z-index: 1000; }
+        .modal { background: white; padding: 2.5rem; border-radius: var(--radius-xl); text-align: center; position: relative; box-shadow: var(--shadow-deep); }
+        .close-btn { position: absolute; top: 1.5rem; right: 1.5rem; background: none; border: none; font-size: 1.5rem; cursor: pointer; font-weight: bold; }
+
+        /* --- NEW EMPLOYEE MODAL (From newemp.html) --- */
+        .signup-card { width: 450px; text-align: center; }
+        .hr-heading { color: var(--dark); font-size: 18px; font-weight: 800; letter-spacing: 1px; text-transform: uppercase; margin-bottom: 25px; opacity: 0.8; }
+        .form-grid { display: flex; flex-direction: column; gap: 14px; margin-bottom: 20px; }
+        .form-grid input { width: 100%; padding: 14px 16px; border-radius: 12px; border: 1px solid rgba(0,0,0,0.1); background: var(--input-bg); outline: none; font-size: 14px; transition: 0.3s; }
+        .form-grid input:focus { border-color: var(--dark); background: #fff; box-shadow: 0 0 0 4px rgba(0,0,0,0.05); }
+        .btn-signup { width: 100%; padding: 16px; border-radius: 14px; background: var(--dark); color: #fff; border: none; font-weight: 800; font-size: 16px; cursor: pointer; margin-top: 15px; transition: all 0.3s; }
+        .btn-signup:hover { background: #000; transform: scale(1.02); }
+        
+        #result-display { margin-top: 25px; padding: 20px; border-radius: 18px; background: rgba(0,0,0,0.03); border: 2px dashed #333; display: none; text-align: left; animation: fadeIn 0.5s ease; }
+        .cred-label { font-size: 10px; font-weight: 800; color: #888; text-transform: uppercase; margin-bottom: 4px; }
+        .cred-value { font-size: 18px; font-weight: 900; color: var(--dark); letter-spacing: 1px; margin-bottom: 12px; display: block; font-family: monospace; }
+        #msg { font-size: 12px; margin-top: 12px; font-weight: 700; min-height: 18px; }
+
+    </style>
+</head>
+<body>
+
+    <!-- Header -->
+    <header>
+        <div class="brand">
+            <div class="logo-icon">A</div>
+            <div class="brand-text">DayFlow Admin</div>
+        </div>
+        <nav class="nav-links">
+            <a onclick="showView('dashboard')" id="nav-dash" class="active">Employees</a>
+            <a onclick="showView('attendance')" id="nav-att">Attendance</a>
+            <a onclick="showView('timeoff')" id="nav-to">Time Off</a>
+        </nav>
+        <div class="header-controls">
+            <span class="admin-tag">Admin Access</span>
+            <div class="avatar-mini" onclick="toggleDropdown()">
+                <img src="https://randomuser.me/api/portraits/women/68.jpg" alt="Admin">
+            </div>
+            <div class="dropdown" id="userDropdown">
+                <div class="dropdown-item" onclick="openMyProfile()">My Profile</div>
+                <div class="dropdown-item">Settings</div>
+                <div class="dropdown-item" style="color:red;" onclick="location.href='hrsignin.html'">Log Out</div>
+            </div>
+        </div>
+    </header>
+
+    <!-- 1. DASHBOARD VIEW -->
+    <div id="dashboard-view" class="view-section active">
+        <div class="quote-section">
+            <div class="quote-text">“The only way to do great work is to love what you do.”</div>
+            <div class="quote-author">— Steve Jobs</div>
+        </div>
+        <div class="controls-row">
+            <button class="btn-new" onclick="openNewEmpModal()">+ New Employee</button>
+            <input type="text" id="empSearch" class="search-bar" placeholder="Search Directory..." onkeyup="filterGrid()">
+        </div>
+        <div class="grid" id="employeeGrid"></div>
+    </div>
+
+    <!-- 2. ATTENDANCE VIEW -->
+    <div id="attendance-view" class="view-section">
+        <div class="admin-att-container">
+            <div class="att-header-bar">
+                <div class="att-title">Attendance Log</div>
+                <input type="text" id="attSearch" class="att-search" placeholder="Search Employee..." onkeyup="filterAttendance()">
+            </div>
+            <div class="att-controls">
+                <button class="nav-sq-btn" onclick="alert('Prev Day')">&lt;</button>
+                <button class="nav-sq-btn" onclick="alert('Next Day')">&gt;</button>
+                <div class="date-picker-wrap"><input type="date" value="2025-10-22"></div>
+                <div class="day-display">Wednesday</div>
+            </div>
+            <table class="att-table">
+                <thead><tr><th>Emp</th><th>Check In</th><th>Check Out</th><th>Work Hours</th><th>Extra Hours</th></tr></thead>
+                <tbody id="attTableBody">
+                    <tr><td><strong>[Aarav Patel]</strong></td><td>10:00</td><td>19:00</td><td>09:00</td><td>01:00</td></tr>
+                    <tr><td><strong>[Diya Sharma]</strong></td><td>10:00</td><td>19:00</td><td>09:00</td><td>01:00</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- 3. TIME OFF VIEW -->
+    <div id="timeoff-view" class="view-section">
+        <div class="time-off-container">
+            <div class="to-tabs-row"><div class="to-tab active">Requests</div><div class="to-tab">History</div></div>
+            <div class="to-toolbar"><input type="text" class="search-bar" placeholder="Search requests..." style="width:100%;"></div>
+            <table class="att-table">
+                <thead><tr><th>Name</th><th>Date</th><th>Type</th><th>Status</th></tr></thead>
+                <tbody id="toTableBody">
+                    <tr id="req-1">
+                        <td>[Aarav Patel]</td><td>28/10/2025</td><td style="color:#3b82f6; font-weight:700;">Paid time Off</td>
+                        <td id="status-cell-1"><div class="action-btn-group"><button class="btn-reject" onclick="updateStatus(1,'reject')">✕</button><button class="btn-approve" onclick="updateStatus(1,'approve')">✓</button></div></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- 4. PROFILE VIEW (SHARED) -->
+    <div id="profile-view" class="view-section">
+        <div class="profile-container">
+            <div style="margin-bottom:1rem; cursor:pointer; font-weight:bold;" onclick="showView('dashboard')">← Back</div>
+            
+            <div class="profile-header-grid">
+                <div class="col-avatar">
+                    <div class="avatar-wrapper">
+                        <img id="pAvatar" src="" class="avatar-large">
+                        <div class="edit-overlay" id="avatarEdit" onclick="alert('Change Photo')">Change Photo</div>
+                    </div>
+                </div>
+                <div class="col-details">
+                    <div class="form-group"><label class="form-label">Full Name</label><input id="pName" type="text" class="form-input"></div>
+                    <div class="form-group"><label class="form-label">Job Position</label><input id="pRole" type="text" class="form-input"></div>
+                    <div class="form-group"><label class="form-label">Email</label><input id="pEmail" type="text" class="form-input"></div>
+                </div>
+                <div class="col-company">
+                    <div class="form-group"><label class="form-label">Status</label><input type="text" class="form-input" value="Active" readonly></div>
+                    <div class="form-group"><label class="form-label">Location</label><input type="text" class="form-input" value="Bangalore, India"></div>
+                </div>
+            </div>
+
+            <div class="tabs">
+                <button class="tab-btn active" id="tab-private" onclick="openTab('private')">Private Info</button>
+                <button class="tab-btn" id="tab-resume" onclick="openTab('resume')">Resume</button>
+                <button class="tab-btn" id="tab-salary" onclick="openTab('salary')">Salary & Wages</button>
+            </div>
+
+            <div id="private" class="tab-content active-tab">
+                <div style="display:grid; grid-template-columns: 1fr 1fr; gap: 3rem;">
+                    <div><h3 style="font-weight:800; margin-bottom:1rem;">Personal</h3><div class="form-group"><label class="form-label">Phone</label><input type="text" class="form-input" id="pPhone"></div></div>
+                    <div><h3 style="font-weight:800; margin-bottom:1rem;">Bank</h3><div class="form-group"><label class="form-label">Account No</label><input type="text" class="form-input" id="pBank"></div></div>
+                </div>
+            </div>
+
+            <div id="resume" class="tab-content">
+                <div class="form-group">
+                    <label class="form-label">Professional Summary & Skills</label>
+                    <textarea id="pResumeText" class="resume-textarea"></textarea>
+                </div>
+            </div>
+
+            <div id="salary" class="tab-content">
+                <div class="salary-header">
+                    <div style="flex:1;"><label style="font-size:0.8rem; font-weight:bold;">Monthly Wage (₹)</label><input type="number" id="monthlyWage" class="big-input" oninput="calculateSalary()"></div>
+                    <div style="flex:1;"><label style="font-size:0.8rem; font-weight:bold;">Yearly Wage (₹)</label><input type="text" id="yearlyWage" class="big-input" readonly style="background:#f0f0f0;"></div>
+                </div>
+                
+                <div class="payroll-status-box">
+                    <div>
+                        <div style="font-size:0.8rem; opacity:0.7;">CURRENT PAYROLL STATUS</div>
+                        <div class="status-text-display st-remaining" id="payrollText">REMAINING</div>
+                    </div>
+                    <button class="status-toggle-btn" onclick="togglePayroll()">Mark as Credited</button>
+                </div>
+            </div>
+
+            <div class="action-bar-sticky" onclick="alert('Changes Saved Successfully!'); showView('dashboard');">
+                <span style="font-weight: 800; text-transform: uppercase; font-size: 0.9rem;">Save Changes</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- NEW EMPLOYEE MODAL (INTEGRATED) -->
+    <div class="modal-overlay" id="newEmpModal" onclick="if(event.target===this) closeNewEmpModal()">
+        <div class="modal signup-card">
+            <button class="close-btn" onclick="closeNewEmpModal()">×</button>
+            <div class="brand">
+                <div class="logo-icon"><i data-lucide="user-plus" size="24"></i></div>
+                <h1 style="font-size:24px; color:#121212;">DayFlow</h1>
+            </div>
+
+            <h2 class="hr-heading">Add Employee</h2>
+
+            <form id="addEmpForm" onsubmit="return false;">
+                <div class="form-grid">
+                    <input type="text" id="companyName" placeholder="Company Name (e.g. Odoo India)" required>
+                    <input type="text" id="fName" placeholder="Employee First Name" required>
+                    <input type="text" id="lName" placeholder="Employee Last Name" required>
+                    <input type="email" id="empEmail" placeholder="Official Email Address" required>
+                    <input type="number" id="joinYear" placeholder="Year of Joining" value="2026" required>
+                </div>
+
+                <button class="btn-signup" onclick="processNewEmployee()">Generate ID & Create</button>
+            </form>
+
+            <p id="msg"></p>
+
+            <div id="result-display">
+                <p class="cred-label">Generated Login ID</p>
+                <span class="cred-value" id="res-id">---</span>
+                
+                <p class="cred-label">System Password</p>
+                <span class="cred-value" id="res-pass">---</span>
+                
+                <p style="font-size:10px; color:var(--primary-red); font-weight:700;">Note: Copy these details. They won't be shown again.</p>
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+        import { getAuth, createUserWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+        import { getFirestore, collection, query, where, getDocs, setDoc, doc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyDOtYswAffd96SMW1_ZZ7j_hxpvvNoPd0E",
+            authDomain: "dayflow-423ca.firebaseapp.com",
+            projectId: "dayflow-423ca",
+            storageBucket: "dayflow-423ca.firebasestorage.app",
+            messagingSenderId: "450526966118",
+            appId: "1:450526966118:web:1ebe2b97bc33aff24358a7"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+        lucide.createIcons();
+
+        // --- NEW EMPLOYEE LOGIC ---
+        window.openNewEmpModal = () => { document.getElementById('newEmpModal').style.display = 'flex'; };
+        window.closeNewEmpModal = () => { document.getElementById('newEmpModal').style.display = 'none'; };
+
+        window.processNewEmployee = async () => {
+            const cName = document.getElementById('companyName').value.trim();
+            const fName = document.getElementById('fName').value.trim();
+            const lName = document.getElementById('lName').value.trim();
+            const email = document.getElementById('empEmail').value.trim();
+            const year = document.getElementById('joinYear').value;
+            const msg = document.getElementById('msg');
+
+            if(!cName || !fName || !lName || !email || !year) {
+                msg.innerText = "Error: Please fill all fields.";
+                msg.style.color = "var(--primary-red)";
+                return;
+            }
+
+            msg.innerText = "Processing System Registration...";
+            msg.style.color = "var(--black)";
+
+            try {
+                // 1. Get Serial Number for this Year and Company
+                const empRef = collection(db, "employees");
+                const q = query(empRef, where("joinYear", "==", year), where("company", "==", cName));
+                const querySnapshot = await getDocs(q);
+                const serial = (querySnapshot.size + 1).toString().padStart(4, '0');
+
+                // 2. Generate ID: [CompanyFirst2] + [First2+Last2] + [Year] + [Serial]
+                const compPrefix = cName.substring(0, 2).toUpperCase();
+                const nameInitials = (fName.substring(0, 2) + lName.substring(0, 2)).toUpperCase();
+                const generatedID = `${compPrefix}${nameInitials}${year}${serial}`;
+
+                // 3. Generate Random Password
+                const tempPass = "DF" + Math.random().toString(36).slice(-4).toUpperCase() + Math.floor(10 + Math.random() * 90) + "!";
+
+                // 4. Firebase Auth
+                const userCred = await createUserWithEmailAndPassword(auth, email, tempPass);
+
+                // 5. Firestore Mapping
+                await setDoc(doc(db, "employees", generatedID), {
+                    uid: userCred.user.uid,
+                    empId: generatedID,
+                    email: email,
+                    fName: fName,
+                    lName: lName,
+                    company: cName,
+                    joinYear: year,
+                    role: "Employee"
+                });
+
+                document.getElementById('res-id').innerText = generatedID;
+                document.getElementById('res-pass').innerText = tempPass;
+                document.getElementById('result-display').style.display = "block";
+                msg.innerText = "Identity Synchronized Successfully.";
+                msg.style.color = "var(--primary-green)";
+                
+                document.getElementById('addEmpForm').reset();
+                // Optionally refresh grid here if linked to realtime data
+
+            } catch (err) {
+                msg.innerText = "Error: " + err.message.replace("Firebase: ", "");
+                msg.style.color = "var(--primary-red)";
+            }
+        };
+
+        // --- EXISTING DASHBOARD LOGIC ---
+        const employees = [
+            { id: 1, name: "Aarav Patel", role: "Senior Architect", img: "https://randomuser.me/api/portraits/men/34.jpg", salary: 80000, phone:"+91 9876543210", bank:"50100998877", resume:"Senior Architect with 10 years experience...", payroll:"Remaining" },
+            { id: 2, name: "Diya Sharma", role: "Product Manager", img: "https://randomuser.me/api/portraits/women/22.jpg", salary: 65000, phone:"+91 9123456789", bank:"60100998877", resume:"Product expert with Agile certification...", payroll:"Credited" }
+        ];
+
+        const adminData = {
+            name: "Meera Joshi", role: "HR Director", img: "https://randomuser.me/api/portraits/women/68.jpg", email: "meera.admin@dayflow.in",
+            phone: "+91 9988776655", bank: "998877665544", resume: "HR Director with 15 years of experience in people management."
+        };
+
+        const grid = document.getElementById('employeeGrid');
+        function renderGrid(data) {
+            grid.innerHTML = '';
+            data.forEach(emp => {
+                const card = document.createElement('div');
+                card.className = 'card';
+                card.onclick = () => openEmployeeProfile(emp.id);
+                card.innerHTML = `
+                    <div style="position:absolute; top:20px; right:20px; font-weight:bold;">●</div>
+                    <img src="${emp.img}" class="card-img">
+                    <h3>${emp.name}</h3><p>${emp.role}</p>
+                    <div class="card-footer"><div><span class="stat-val">Edit</span><span class="stat-label">Profile</span></div><div><span class="stat-val">View</span><span class="stat-label">Payroll</span></div></div>
+                `;
+                grid.appendChild(card);
+            });
+        }
+        renderGrid(employees);
+
+        // Make functions available globally since we are in a module
+        window.openEmployeeProfile = (id) => {
+            const emp = employees.find(e => e.id === id);
+            setupProfileView(emp, false);
+            document.getElementById('monthlyWage').value = emp.salary;
+            calculateSalary();
+            updatePayrollUI(emp.payroll);
+            showView('profile');
+        };
+
+        window.openMyProfile = () => {
+            setupProfileView(adminData, true);
+            showView('profile');
+        };
+
+        function setupProfileView(data, isAdminSelf) {
+            document.getElementById('pAvatar').src = data.img;
+            document.getElementById('pName').value = data.name;
+            document.getElementById('pRole').value = data.role;
+            document.getElementById('pEmail').value = data.email || (data.name.split(' ')[0].toLowerCase() + "@dayflow.in");
+            document.getElementById('pPhone').value = data.phone;
+            document.getElementById('pBank').value = data.bank;
+            document.getElementById('pResumeText').value = data.resume;
+
+            const salaryTab = document.getElementById('tab-salary');
+            if (isAdminSelf) {
+                salaryTab.style.display = 'none';
+                document.getElementById('avatarEdit').style.display = 'flex';
+            } else {
+                salaryTab.style.display = 'block';
+                document.getElementById('avatarEdit').style.display = 'none';
+            }
+            openTab('private');
+        }
+
+        window.togglePayroll = () => {
+            const txt = document.getElementById('payrollText');
+            if(txt.innerText === 'REMAINING') updatePayrollUI('Credited');
+            else updatePayrollUI('Remaining');
+        };
+
+        function updatePayrollUI(status) {
+            const txt = document.getElementById('payrollText');
+            const btn = document.querySelector('.status-toggle-btn');
+            
+            if(status === 'Credited') {
+                txt.innerText = 'CREDITED';
+                txt.className = 'status-text-display st-credited';
+                btn.innerText = 'Mark as Remaining';
+            } else {
+                txt.innerText = 'REMAINING';
+                txt.className = 'status-text-display st-remaining';
+                btn.innerText = 'Mark as Credited';
+            }
+        }
+
+        window.calculateSalary = () => {
+            const wage = parseFloat(document.getElementById('monthlyWage').value) || 0;
+            document.getElementById('yearlyWage').value = (wage * 12).toLocaleString();
+        };
+
+        window.showView = (viewId) => {
+            document.querySelectorAll('.view-section').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('.nav-links a').forEach(el => el.classList.remove('active'));
+            document.getElementById(viewId + '-view').classList.add('active');
+            
+            if(viewId==='dashboard') document.getElementById('nav-dash').classList.add('active');
+            if(viewId==='attendance') document.getElementById('nav-att').classList.add('active');
+            if(viewId==='timeoff') document.getElementById('nav-to').classList.add('active');
+            closeDropdown();
+            window.scrollTo(0,0);
+        };
+
+        window.openTab = (tabId) => {
+            document.querySelectorAll('.tab-content').forEach(p => p.classList.remove('active-tab'));
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+            document.getElementById(tabId).classList.add('active-tab');
+            document.getElementById('tab-' + tabId).classList.add('active');
+        };
+
+        window.filterGrid = () => {
+            const query = document.getElementById('empSearch').value.toLowerCase();
+            const filtered = employees.filter(e => e.name.toLowerCase().includes(query));
+            renderGrid(filtered);
+        };
+
+        window.filterAttendance = () => {
+            const query = document.getElementById('attSearch').value.toLowerCase();
+            const rows = document.getElementById('attTableBody').getElementsByTagName('tr');
+            for(let i=0; i<rows.length; i++) {
+                const name = rows[i].getElementsByTagName('td')[0].innerText.toLowerCase();
+                rows[i].style.display = name.includes(query) ? '' : 'none';
+            }
+        };
+
+        window.updateStatus = (id, action) => {
+            const cell = document.getElementById('status-cell-'+id);
+            cell.innerHTML = action === 'approve' ? `<span class="status-badge status-approved">Approved</span>` : `<span class="status-badge status-rejected">Rejected</span>`;
+        };
+
+        window.toggleDropdown = () => { document.getElementById('userDropdown').classList.toggle('show'); };
+        window.closeDropdown = () => { document.getElementById('userDropdown').classList.remove('show'); };
+
+    </script>
+</body>
+</html>
